@@ -1,4 +1,4 @@
--- OTP Cleanup SQL
+git remote add origin https://github.com/Iamsam45x/Qrealm.git-- OTP Cleanup SQL
 -- Run this in Supabase SQL Editor to remove OTP-related columns
 
 ALTER TABLE users DROP COLUMN IF EXISTS otp;
