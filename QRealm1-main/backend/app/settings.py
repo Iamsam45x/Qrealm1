@@ -97,7 +97,7 @@ class Settings(BaseSettings):
         description="Primary frontend URL"
     )
     ALLOWED_ORIGINS: str = Field(
-        default="http://localhost:3000,https://qrealm1-fswv.vercel.app",
+        default="https://qrealm1-fswv.vercel.app",
         validation_alias="ALLOWED_ORIGINS",
         description="Comma-separated CORS origins (dev + production frontend)"
     )
