@@ -25,15 +25,14 @@ function toParagraphs(content: string) {
 export default async function BlogPostPage({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
-  const { slug } = params
+  const { slug } = await params
   const cookie = (await headers()).get("cookie") ?? ""
   const result = await getBlogBySlug(slug, { cookie })
 
-  if (!result.success) {
-    if (result.code === "NOT_FOUND") notFound()
-    throw new Error(result.error)
+  if (!result || result.success === false) {
+    notFound()
   }
 
   const blog = result.data

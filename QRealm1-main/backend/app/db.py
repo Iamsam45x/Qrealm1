@@ -1,136 +1,163 @@
-import os
-import sqlite3
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import Any, Generator, List, Optional, Tuple
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
-DB_PATH = os.getenv("DATABASE_PATH", "./app.db")
-
-SCHEMA_SQL = """
-PRAGMA foreign_keys = ON;
-
-CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
-  role TEXT NOT NULL,
-  bio TEXT,
-  created_at TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS blogs (
-  id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  slug TEXT NOT NULL UNIQUE,
-  content TEXT NOT NULL,
-  author_id TEXT NOT NULL,
-  published INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  FOREIGN KEY(author_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS forums (
-  id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  content TEXT NOT NULL,
-  author_id TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  FOREIGN KEY(author_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS comments (
-  id TEXT PRIMARY KEY,
-  content TEXT NOT NULL,
-  user_id TEXT NOT NULL,
-  blog_id TEXT,
-  forum_id TEXT,
-  parent_id TEXT,
-  created_at TEXT NOT NULL,
-  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY(blog_id) REFERENCES blogs(id) ON DELETE CASCADE,
-  FOREIGN KEY(forum_id) REFERENCES forums(id) ON DELETE CASCADE,
-  FOREIGN KEY(parent_id) REFERENCES comments(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS likes (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL,
-  blog_id TEXT,
-  forum_id TEXT,
-  created_at TEXT NOT NULL,
-  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY(blog_id) REFERENCES blogs(id) ON DELETE CASCADE,
-  FOREIGN KEY(forum_id) REFERENCES forums(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS refresh_tokens (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL,
-  token TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  expires_at TEXT NOT NULL,
-  revoked INTEGER NOT NULL DEFAULT 0,
-  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-
-CREATE INDEX IF NOT EXISTS idx_blogs_author ON blogs(author_id);
-CREATE INDEX IF NOT EXISTS idx_blogs_created ON blogs(created_at);
-CREATE INDEX IF NOT EXISTS idx_blogs_published ON blogs(published);
-CREATE INDEX IF NOT EXISTS idx_blogs_slug ON blogs(slug);
-
-CREATE INDEX IF NOT EXISTS idx_forums_author ON forums(author_id);
-CREATE INDEX IF NOT EXISTS idx_forums_created ON forums(created_at);
-
-CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id);
-CREATE INDEX IF NOT EXISTS idx_comments_blog ON comments(blog_id);
-CREATE INDEX IF NOT EXISTS idx_comments_forum ON comments(forum_id);
-CREATE INDEX IF NOT EXISTS idx_comments_parent ON comments(parent_id);
-
-CREATE INDEX IF NOT EXISTS idx_likes_user ON likes(user_id);
-CREATE INDEX IF NOT EXISTS idx_likes_blog ON likes(blog_id);
-CREATE INDEX IF NOT EXISTS idx_likes_forum ON likes(forum_id);
-
-CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
-CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);
-CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_at);
-CREATE INDEX IF NOT EXISTS idx_refresh_tokens_revoked ON refresh_tokens(revoked);
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_like_user_blog
-  ON likes(user_id, blog_id) WHERE blog_id IS NOT NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS idx_like_user_forum
-  ON likes(user_id, forum_id) WHERE forum_id IS NOT NULL;
-"""
+from sqlalchemy import text
+from sqlalchemy.engine import Row
+from sqlalchemy.exc import OperationalError
+from app.db_engine import Base, get_session_local, init_db as init_db_sqlalchemy
 
 
-def connect() -> sqlite3.Connection:
-  conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-  conn.row_factory = sqlite3.Row
-  conn.execute("PRAGMA foreign_keys = ON;")
-  return conn
+def _prepare_sql_params(statement: str, parameters: Tuple) -> Tuple[str, dict]:
+    """
+    Convert '?' placeholders to named binds for SQLAlchemy text().
+    Provides compatibility with legacy code using '?' syntax.
+    """
+    if not parameters:
+        return statement, {}
+    parts = statement.split("?")
+    expected = len(parts) - 1
+    if expected != len(parameters):
+        raise ValueError(
+            f"SQL placeholder mismatch: {expected} '?' in query, "
+            f"{len(parameters)} parameters (snippet: {statement[:120]!r})"
+        )
+    keys = [f"p{i}" for i in range(len(parameters))]
+    out: List[str] = []
+    for i, part in enumerate(parts[:-1]):
+        out.append(part)
+        out.append(f":{keys[i]}")
+    out.append(parts[-1])
+    bind = {keys[i]: parameters[i] for i in range(len(parameters))}
+    return "".join(out), bind
+
+
+class RowWrapper:
+    """Provides sqlite3.Row-like access for SQLAlchemy rows."""
+    def __init__(self, row: Row):
+        self._row = row
+        self._mapping = row._mapping
+        self._keys = list(row._mapping.keys())
+        self._values = list(row._mapping.values())
+    
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self._values[key] if key < len(self._values) else None
+        return self._mapping[key]
+    
+    def __contains__(self, key: str) -> bool:
+        return key in self._mapping
+    
+    def __iter__(self):
+        return iter(self._values)
+    
+    def __len__(self) -> int:
+        return len(self._values)
+    
+    def keys(self):
+        return self._mapping.keys()
+    
+    def values(self):
+        return self._mapping.values()
+    
+    def items(self):
+        return self._mapping.items()
+    
+    def get(self, key: str, default: Any = None) -> Any:
+        return self._mapping.get(key, default)
+
+
+class ConnectionWrapper:
+    """Provides sqlite3.Connection-like interface for SQLAlchemy sessions."""
+    def __init__(self, session):
+        self._session = session
+    
+    def execute(self, statement, parameters=None):
+        if parameters:
+            params: Tuple = tuple(parameters) if not isinstance(parameters, tuple) else parameters
+            stmt, bind = _prepare_sql_params(statement, params)
+            result = self._session.execute(text(stmt), bind)
+        else:
+            result = self._session.execute(text(statement))
+        return ResultWrapper(result)
+    
+    def commit(self):
+        self._session.commit()
+    
+    def rollback(self):
+        self._session.rollback()
+    
+    def close(self):
+        self._session.close()
+
+
+class ResultWrapper:
+    """Provides sqlite3.Cursor-like interface for SQLAlchemy results."""
+    def __init__(self, result):
+        self._result = result
+    
+    def fetchone(self) -> Optional[RowWrapper]:
+        row = self._result.fetchone()
+        if row is None:
+            return None
+        return RowWrapper(row)
+    
+    def fetchall(self) -> List[RowWrapper]:
+        return [RowWrapper(row) for row in self._result.fetchall()]
+    
+    def first(self) -> Optional[Any]:
+        row = self._result.fetchone()
+        if row is None:
+            return None
+        return row[0]
+    
+    @property
+    def lastrowid(self):
+        """Not directly supported in SQLAlchemy."""
+        return None
 
 
 @contextmanager
-def get_conn():
-  conn = connect()
-  try:
-    yield conn
-  finally:
-    conn.close()
+def get_conn() -> Generator[ConnectionWrapper, None, None]:
+    """Context manager for database connections."""
+    SessionLocal = get_session_local()
+    session = SessionLocal()
+    conn = ConnectionWrapper(session)
+    try:
+        yield conn
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def connect() -> ConnectionWrapper:
+    """Non-context manager version of a DB connection."""
+    SessionLocal = get_session_local()
+    session = SessionLocal()
+    return ConnectionWrapper(session)
 
 
 def init_db() -> None:
-  with get_conn() as conn:
-    conn.executescript(SCHEMA_SQL)
-    conn.commit()
+    """Initialize database tables using SQLAlchemy Base.metadata.create_all."""
+    init_db_sqlalchemy()
 
 
 def now_iso() -> str:
-  return datetime.utcnow().isoformat() + "Z"
+    """Current UTC time in ISO format."""
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def check_db_connection() -> dict:
+    """Check database connectivity for PostgreSQL/Supabase."""
+    SessionLocal = get_session_local()
+    session = SessionLocal()
+    try:
+        session.execute(text("SELECT 1"))
+        return {"connected": True, "database_type": "postgresql"}
+    except OperationalError as e:
+        return {"connected": False, "error": str(e), "database_type": "postgresql"}
+    finally:
+        session.close()

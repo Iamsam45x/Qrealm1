@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useCallback, useState } from "react"
 import Link from "next/link"
 import { ParticleField } from "@/components/particle-field"
 import { NeuralNetwork } from "@/components/neural-network"
-import { listBlogs, type Blog } from "@/lib/api"
+import { listBlogs, listForums, type Blog, type Forum } from "@/lib/api"
 
 /* ===== SCROLL REVEAL HOOK ===== */
 function useReveal() {
@@ -45,8 +45,11 @@ function useReveal() {
 export default function HomePage() {
   const containerRef = useReveal()
   const [blogs, setBlogs] = useState<Blog[]>([])
+  const [forums, setForums] = useState<Forum[]>([])
   const [blogError, setBlogError] = useState<string | null>(null)
+  const [forumError, setForumError] = useState<string | null>(null)
   const [loadingBlogs, setLoadingBlogs] = useState(true)
+  const [loadingForums, setLoadingForums] = useState(true)
 
   useEffect(() => {
     let mounted = true
@@ -69,6 +72,32 @@ export default function HomePage() {
       }
     }
     void loadBlogs()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    async function loadForums() {
+      setLoadingForums(true)
+      try {
+        const result = await listForums({ page: 1, limit: 4 })
+        if (!mounted) return
+        if (result.success) {
+          setForums(result.data.items)
+          setForumError(null)
+        } else {
+          setForumError(result.error)
+        }
+      } catch (err) {
+        if (!mounted) return
+        setForumError((err as Error).message || "Failed to load forums")
+      } finally {
+        if (mounted) setLoadingForums(false)
+      }
+    }
+    void loadForums()
     return () => {
       mounted = false
     }
@@ -219,7 +248,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===== BLOG SECTION ===== */}
+{/* ===== INTELLECTUAL DISCOURSES - BLOGS ===== */}
       <section className="relative z-10 px-4 py-24 md:py-32" id="discourses">
         <div className="mx-auto max-w-6xl">
           <div className="reveal mb-16 text-center" style={{ transitionDelay: "0ms" }}>
@@ -227,7 +256,7 @@ export default function HomePage() {
               Intellectual Discourses
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-              Rigorous analyses bridging ancient wisdom and frontier science. Each discourse examines a fundamental conflict from multiple interpretive lenses.
+              Rigorous analyses bridging ancient wisdom and frontier science.
             </p>
             <div className="mx-auto mt-4 h-px w-24 bg-gradient-to-r from-transparent via-saffron-500 to-transparent" />
           </div>
@@ -235,12 +264,17 @@ export default function HomePage() {
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {loadingBlogs && (
               <div className="glass-card rounded-2xl p-7 text-sm text-muted-foreground">
-                Loading discourses...
+                Loading...
               </div>
             )}
             {blogError && (
               <div className="glass-card rounded-2xl border border-red-500/30 bg-red-500/10 p-7 text-sm text-red-200">
                 {blogError}
+              </div>
+            )}
+            {!loadingBlogs && !blogError && blogs.length === 0 && (
+              <div className="col-span-full glass-card rounded-2xl p-7 text-sm text-muted-foreground text-center">
+                No discourses yet. <Link href="/blogs" className="text-saffron-400">Start one</Link>
               </div>
             )}
             {!loadingBlogs &&
@@ -252,8 +286,11 @@ export default function HomePage() {
                   style={{ transitionDelay: `${i * 120}ms` }}
                 >
                   <article className="glass-card animate-float-slow group flex h-full flex-col rounded-2xl p-7" style={{ animationDelay: `${i * 1.2}s` }}>
-                    <div className="mb-4 flex h-8 w-8 items-center justify-center rounded-full bg-saffron-500/10 text-xs font-semibold text-saffron-400">
-                      {String(i + 1).padStart(2, "0")}
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-saffron-500/10 text-xs font-semibold text-saffron-400">
+                        {String(i + 1).padStart(2, "0")}
+                      </div>
+                      <span className="text-xs text-muted-foreground/60">BLOG</span>
                     </div>
 
                     <h3 className="font-serif text-xl font-semibold leading-snug text-foreground transition-colors duration-300 group-hover:text-saffron-300">
@@ -265,7 +302,7 @@ export default function HomePage() {
                     </p>
 
                     <div className="mt-4 text-xs text-muted-foreground/60">
-                      {post.author?.name ?? "Unknown author"}
+                      {post.author?.name ?? "Unknown"}
                     </div>
 
                     <div className="mt-5">
@@ -273,7 +310,7 @@ export default function HomePage() {
                         href={`/blogs/${post.slug}`}
                         className="saffron-underline inline-flex items-center gap-2 text-sm font-medium text-saffron-400 transition-colors duration-300 hover:text-saffron-300"
                       >
-                        Read Full Analysis
+                        Read Analysis
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="transition-transform duration-300 group-hover:translate-x-1">
                           <path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
@@ -282,6 +319,69 @@ export default function HomePage() {
                   </article>
                 </div>
               ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== INTELLECTUAL DISCOVERIES - FORUMS ===== */}
+      <section className="relative z-10 px-4 py-24 md:py-32" style={{ background: "hsl(0, 0%, 3%)" }}>
+        <div className="mx-auto max-w-6xl">
+          <div className="reveal mb-16 text-center" style={{ transitionDelay: "0ms" }}>
+            <h2 className="font-serif text-3xl font-semibold md:text-4xl lg:text-5xl">
+              Intellectual Discoveries
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+              Open discussions and collaborative inquiry into fundamental questions.
+            </p>
+            <div className="mx-auto mt-4 h-px w-24 bg-gradient-to-r from-transparent via-blue-500 to-transparent" />
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {loadingForums && (
+              <div className="col-span-full glass-card rounded-xl p-6 text-sm text-muted-foreground text-center">
+                Loading discussions...
+              </div>
+            )}
+            {forumError && (
+              <div className="col-span-full glass-card rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-sm text-red-200">
+                {forumError}
+              </div>
+            )}
+            {!loadingForums && !forumError && forums.length === 0 && (
+              <div className="col-span-full glass-card rounded-xl p-6 text-sm text-muted-foreground text-center">
+                No discussions yet. <Link href="/forums" className="text-blue-400">Start one</Link>
+              </div>
+            )}
+            {!loadingForums && !forumError && forums.map((forum, i) => (
+              <Link
+                key={forum.id}
+                href={`/forums/${forum.id}`}
+                className="reveal glass-card group flex flex-col rounded-xl p-5 transition-all hover:border-blue-500/30"
+                style={{ transitionDelay: `${i * 100}ms` }}
+              >
+                <div className="flex items-center gap-2 text-xs text-muted-foreground/60 mb-2">
+                  <span className="text-blue-400">FORUM</span>
+                  <span>·</span>
+                  <span>{new Date(forum.createdAt).toLocaleDateString()}</span>
+                </div>
+                <h3 className="font-serif text-lg font-semibold text-foreground group-hover:text-blue-300">
+                  {forum.title}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                  {forum.content.slice(0, 150)}...
+                </p>
+                <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground/60">
+                  <span>{forum.author?.name ?? "Unknown"}</span>
+                  <span>{forum._count?.comments ?? 0} comments</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link href="/forums" className="saffron-underline text-sm font-medium">
+              View All Discussions →
+            </Link>
           </div>
         </div>
       </section>

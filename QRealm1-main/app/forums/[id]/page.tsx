@@ -25,15 +25,14 @@ function toParagraphs(content: string) {
 export default async function ForumPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  const { id } = params
+  const { id } = await params
   const cookie = (await headers()).get("cookie") ?? ""
   const result = await getForumById(id, { cookie })
 
-  if (!result.success) {
-    if (result.code === "NOT_FOUND") notFound()
-    throw new Error(result.error)
+  if (!result || result.success === false) {
+    notFound()
   }
 
   const forum = result.data

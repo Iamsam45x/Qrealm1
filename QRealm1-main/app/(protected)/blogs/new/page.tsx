@@ -26,6 +26,7 @@ export default function NewBlogPage() {
       }
       router.push(`/blogs/${result.data.slug}`)
     } catch (err) {
+      console.error("Create blog error:", err)
       setError((err as Error).message || "Failed to create blog")
     } finally {
       setLoading(false)

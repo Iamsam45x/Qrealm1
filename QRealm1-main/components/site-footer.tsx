@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { FooterHealthRow } from "@/components/footer-health-row"
 
 export function SiteFooter() {
   return (
@@ -35,6 +36,7 @@ export function SiteFooter() {
           <p className="text-xs text-muted-foreground/60">
             Battle of Interpretations – Tattva Vimarsha &copy; {new Date().getFullYear()} Battle of Interpretations. All rights reserved.
           </p>
+          <FooterHealthRow />
         </div>
       </div>
     </footer>

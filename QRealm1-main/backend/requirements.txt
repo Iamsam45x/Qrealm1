@@ -5,4 +5,20 @@ PyJWT
 passlib[bcrypt]
 bcrypt==4.0.1
 python-dotenv
+pydantic-settings
 email-validator
+
+# Database
+sqlalchemy[asyncio]
+asyncpg
+alembic
+
+# PostgreSQL (alternative driver)
+psycopg2-binary
+
+# Firebase Admin
+firebase-admin==6.5.0
+
+# Testing
+pytest
+pytest-asyncio

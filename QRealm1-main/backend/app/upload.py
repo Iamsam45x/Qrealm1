@@ -4,7 +4,9 @@ from typing import Optional
 
 from fastapi import UploadFile
 
-UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")
+from app.settings import settings
+
+UPLOAD_DIR = settings.UPLOAD_DIR
 
 
 def ensure_upload_dir(folder: Optional[str] = None) -> str:

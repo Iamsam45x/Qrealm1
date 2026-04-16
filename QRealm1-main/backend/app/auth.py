@@ -1,29 +1,21 @@
-import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 import jwt
 from passlib.context import CryptContext
 
 from app.db import now_iso
+from app.settings import settings
 
 pwd_context = CryptContext(
   schemes=["bcrypt_sha256", "bcrypt"],
   deprecated="auto",
 )
 
-JWT_ACCESS_SECRET = os.getenv("JWT_ACCESS_SECRET", "dev-access-secret")
-JWT_REFRESH_SECRET = os.getenv("JWT_REFRESH_SECRET", "dev-refresh-secret")
-
-try:
-  ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
-except ValueError:
-  ACCESS_TOKEN_EXPIRE_MINUTES = 60
-
-try:
-  REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
-except ValueError:
-  REFRESH_TOKEN_EXPIRE_DAYS = 7
+JWT_ACCESS_SECRET = settings.JWT_SECRET_KEY
+JWT_REFRESH_SECRET = settings.JWT_REFRESH_SECRET_KEY
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+REFRESH_TOKEN_EXPIRE_DAYS = settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
 
 
 def hash_password(password: str) -> str:
@@ -41,7 +33,7 @@ def _create_token(
   expires_delta: timedelta,
   secret: str,
 ) -> str:
-  now = datetime.utcnow()
+  now = datetime.now(timezone.utc)
   payload = {
     "sub": subject,
     "role": role,

@@ -1,76 +1,95 @@
-# Educational Platform ? Backend (FastAPI + SQLite)
+# Educational Platform — Backend (FastAPI + PostgreSQL)
 
-Simple, beginner?friendly backend that matches the existing frontend API.
+FastAPI API that matches the Next.js frontend. The database is **PostgreSQL** via SQLAlchemy and `DATABASE_URL`.
 
 ## Stack
 
 - Python + FastAPI
-- SQLite (single file)
-- JWT auth (access + refresh)
+- PostgreSQL (recommended local URL: `postgresql+psycopg2://user:pass@localhost:5432/dbname`)
+- SQLAlchemy + Alembic migrations
+- JWT auth (access + refresh) and httpOnly cookies
 - Local file uploads
 
-## Setup
+## PostgreSQL setup
 
-```bash
-cd backend
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r requirements.txt
-```
+1. **Install PostgreSQL** and create a database:
 
-Create `.env` from `.env.example` and update secrets:
+   ```bash
+   # Example (psql) — adjust user/password/db name
+   createdb mydb
+   # or
+   psql -U postgres -c "CREATE DATABASE mydb;"
+   ```
 
-```bash
-copy .env.example .env
-```
+2. **Configure the backend** — copy `backend/.env.example` to `backend/.env` and set:
 
-Initialize database and create admin user:
+   ```env
+   DATABASE_URL=postgresql+psycopg2://username:password@localhost:5432/mydb
+   ALLOWED_ORIGINS=http://localhost:3000,https://my-production-frontend.com
+   ```
 
-```bash
-python -m app.seed
-```
+3. **Install dependencies** (from the `backend` folder):
 
-Run the server:
+   ```bash
+   python -m venv .venv
+   .\.venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
 
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 4000 --reload
-```
+4. **Create tables** (pick one):
+
+   - **Alembic (recommended for production)**
+
+     ```bash
+     alembic upgrade head
+     ```
+
+   - **SQLAlchemy `create_all` (dev / empty DB)** — already run on app startup via `init_db()` in `app/database.py`:
+
+     ```python
+     from app.database import Base, get_engine
+     Base.metadata.create_all(bind=get_engine())
+     ```
+
+5. **Seed admin user** (optional):
+
+   ```bash
+   python -m app.seed
+   ```
+
+6. **Run the server**:
+
+   ```bash
+   uvicorn app.main:app --host 0.0.0.0 --port 4000 --reload
+   ```
+
+## Environment variables
+
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | SQLAlchemy URL, e.g. `postgresql+psycopg2://user:pass@host:5432/db` |
+| `ENVIRONMENT` | `development` or `production` (production enforces stricter checks) |
+| `ALLOWED_ORIGINS` | Comma-separated CORS origins (frontend dev + production URLs) |
+| `JWT_SECRET_KEY` / `JWT_REFRESH_SECRET_KEY` | JWT signing secrets (required strong values in production) |
 
 ## API base
 
 - Base URL: `http://localhost:4000/api`
-- Auth: JWT in `Authorization: Bearer <token>` or cookie `accessToken`
-- Refresh: cookie `refreshToken` or body `refreshToken`
+- Health: `GET /api/health` (returns `503` if the database is unreachable)
+- Auth: JWT in `Authorization: Bearer <token>` or cookies `accessToken` / `refreshToken`
 
 ### Auth
-- `POST /api/auth/register` ? body: name, email, password, role?, bio?
-- `POST /api/auth/login` ? body: email, password
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
 - `POST /api/auth/logout`
-- `GET /api/auth/me` ? requires auth
-- `POST /api/auth/refresh` ? refresh token in cookie or body
+- `GET /api/auth/me`
+- `POST /api/auth/refresh`
 
-### Blogs
-- `GET /api/blogs` ? query: page, limit, search, published
-- `GET /api/blogs/popular` ? query: limit
-- `GET /api/blogs/:slug`
-- `POST /api/blogs` ? ADMIN/PROFESSOR; body: title, content, published?
-- `PUT /api/blogs/:id`
-- `DELETE /api/blogs/:id`
-- `POST /api/blogs/:id/comment` ? body: content, parentId?
-- `POST /api/blogs/:id/like`
+### Blogs / forums / upload / admin
 
-### Forums
-- `GET /api/forums` ? query: page, limit
-- `GET /api/forums/:id`
-- `POST /api/forums` ? body: title, content
-- `POST /api/forums/:id/comment` ? body: content, parentId?
-- `POST /api/forums/:id/like`
+See previous API documentation in the repository; routes are unchanged.
 
-### Upload (authenticated)
-- `POST /api/upload` ? multipart field `file`
-- `POST /api/upload/signed-params` ? returns local upload hint
+## Raw SQL placeholders
 
-### Admin (ADMIN only)
-- `GET /api/admin/users` ? query: page, limit
-- `GET /api/admin/analytics`
-- `DELETE /api/admin/user/:id`
+Application code uses SQLite-style `?` placeholders in SQL strings. `app/db.py` rewrites them to SQLAlchemy named parameters so the same queries work with **PostgreSQL** and optional **SQLite** fallback when `DATABASE_URL` is not set.

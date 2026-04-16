@@ -9,9 +9,8 @@ import { useAuth } from "@/components/auth/auth-provider"
 
 const navItems = [
   { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
-  { label: "Quantum Physics", href: "/quantum-physics" },
-  { label: "Quantum Computing", href: "/quantum-computing" },
+  { label: "Learning Hub", href: "/learning-hub" },
+  { label: "Search", href: "/search" },
   { label: "Blogs", href: "/blogs" },
   { label: "Forums", href: "/forums" },
 ]
@@ -63,11 +62,19 @@ export function SiteHeader() {
               </Link>
             )
           })}
-          <div className="ml-3 flex items-center gap-2">
+<div className="ml-3 flex items-center gap-2">
             {loading ? (
               <span className="text-xs text-muted-foreground">...</span>
             ) : user ? (
               <>
+                {user.role === "ADMIN" && (
+                  <Link
+                    href="/admin"
+                    className="rounded-md px-3 py-2 text-sm font-medium text-saffron-400 transition-colors hover:text-saffron-300"
+                  >
+                    Admin
+                  </Link>
+                )}
                 <Link
                   href="/account"
                   className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -135,11 +142,20 @@ export function SiteHeader() {
                 </Link>
               )
             })}
-            <div className="mt-2 border-t border-[hsl(0,0%,100%,0.08)] pt-2">
+<div className="mt-2 border-t border-[hsl(0,0%,100%,0.08)] pt-2">
               {loading ? (
                 <span className="block px-3 py-2 text-xs text-muted-foreground">...</span>
               ) : user ? (
                 <>
+                  {user.role === "ADMIN" && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileOpen(false)}
+                      className="block rounded-md px-3 py-2.5 text-sm font-medium text-saffron-400 transition-all duration-300 hover:text-saffron-300"
+                    >
+                      Admin
+                    </Link>
+                  )}
                   <Link
                     href="/account"
                     onClick={() => setMobileOpen(false)}

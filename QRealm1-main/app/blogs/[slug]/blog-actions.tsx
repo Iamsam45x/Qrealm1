@@ -3,8 +3,10 @@
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { addBlogComment, toggleBlogLike, type Blog, type Comment } from "@/lib/api"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { addBlogComment, toggleBlogLike, createLearningInteraction, createUserReport, type Blog, type Comment } from "@/lib/api"
 import { useAuth } from "@/components/auth/auth-provider"
+import { AlertTriangle } from "lucide-react"
 
 function sortComments(comments: Comment[]) {
   return [...comments].sort((a, b) => {
@@ -41,8 +43,41 @@ export function BlogActions({ blog }: { blog: Blog }) {
   const [error, setError] = useState<string | null>(null)
   const [loadingComment, setLoadingComment] = useState(false)
   const [loadingLike, setLoadingLike] = useState(false)
+  
+  const [learningDialogOpen, setLearningDialogOpen] = useState(false)
+  const [submissionType, setSubmissionType] = useState<"ERROR_REPORT" | "DOUBT">("ERROR_REPORT")
+  const [learningContent, setLearningContent] = useState("")
+  const [learningLoading, setLearningLoading] = useState(false)
+  const [learningSubmitted, setLearningSubmitted] = useState(false)
+
+  const [reportDialogOpen, setReportDialogOpen] = useState(false)
+  const [reportReason, setReportReason] = useState("")
+  const [reportLoading, setReportLoading] = useState(false)
+  const [reportSubmitted, setReportSubmitted] = useState(false)
 
   const sortedComments = useMemo(() => sortComments(comments), [comments])
+
+  async function onSubmitLearningInteraction() {
+    if (!learningContent.trim()) return
+    setLearningLoading(true)
+    try {
+      const result = await createLearningInteraction({
+        targetType: "blog",
+        targetId: blog.slug || blog.id,
+        interactionType: submissionType,
+        content: learningContent.trim()
+      })
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      setLearningSubmitted(true)
+      setTimeout(() => setLearningDialogOpen(false), 2000)
+    } catch (err) {
+      setError((err as Error).message || "Failed to submit")
+    } finally {
+      setLearningLoading(false)
+    }
+  }
 
   async function onSubmitComment(event: React.FormEvent) {
     event.preventDefault()
@@ -80,7 +115,48 @@ export function BlogActions({ blog }: { blog: Blog }) {
     }
   }
 
-  return (
+  function handleDialogClose(open: boolean) {
+    setLearningDialogOpen(open)
+    if (!open) {
+      setLearningSubmitted(false)
+      setLearningContent("")
+    }
+  }
+
+  async function onSubmitReport() {
+    if (!reportReason.trim()) return
+    setReportLoading(true)
+    try {
+      const result = await createUserReport({
+        targetType: "blog",
+        targetId: blog.id,
+        reason: reportReason.trim()
+      })
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      setReportSubmitted(true)
+      setTimeout(() => {
+        setReportDialogOpen(false)
+        setReportSubmitted(false)
+        setReportReason("")
+      }, 2000)
+    } catch (err) {
+      setError((err as Error).message || "Failed to submit report")
+    } finally {
+      setReportLoading(false)
+    }
+  }
+
+  function handleReportDialogClose(open: boolean) {
+    setReportDialogOpen(open)
+    if (!open) {
+      setReportSubmitted(false)
+      setReportReason("")
+    }
+  }
+
+return (
     <div className="mt-12 space-y-8">
       <div className="flex flex-wrap items-center gap-4">
         <Button
@@ -91,9 +167,126 @@ export function BlogActions({ blog }: { blog: Blog }) {
         >
           {liked ? "Unlike" : "Like"} · {likeCount}
         </Button>
+        
+        <Dialog open={learningDialogOpen} onOpenChange={handleDialogClose}>
+          <DialogTrigger asChild>
+            <Button type="button" variant="outline" className="border-saffron-500/30 text-saffron-400 hover:bg-saffron-500/10">
+              Help Us Improve
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Error Report or Doubt</DialogTitle>
+            </DialogHeader>
+            {learningSubmitted ? (
+              <div className="text-center py-4">
+                <p className="text-green-400 text-lg mb-2">Submission Received</p>
+                <p className="text-sm text-muted-foreground">
+                  Your submission is under review. If it is an error, it will be corrected. If it is a doubt, you will receive an explanation.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">What would you like to submit?</p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={submissionType === "ERROR_REPORT" ? "default" : "outline"}
+                      onClick={() => setSubmissionType("ERROR_REPORT")}
+                      className={submissionType === "ERROR_REPORT" ? "bg-red-600 hover:bg-red-500" : ""}
+                    >
+                      Error Report
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={submissionType === "DOUBT" ? "default" : "outline"}
+                      onClick={() => setSubmissionType("DOUBT")}
+                      className={submissionType === "DOUBT" ? "bg-blue-600 hover:bg-blue-500" : ""}
+                    >
+                      Ask a Doubt
+                    </Button>
+                  </div>
+                </div>
+
+                {submissionType === "ERROR_REPORT" && (
+                  <p className="text-xs text-amber-400 bg-amber-500/10 p-2 rounded">
+                    Not sure if it's an error? Ask as a doubt instead.
+                  </p>
+                )}
+
+                <Textarea
+                  value={learningContent}
+                  onChange={(e) => setLearningContent(e.target.value)}
+                  placeholder={submissionType === "ERROR_REPORT" 
+                    ? "Describe what you believe is incorrect and why..."
+                    : "What concept or explanation do you not understand?"}
+                  className="min-h-[120px]"
+                />
+
+                {error && (
+                  <p className="text-sm text-red-400">{error}</p>
+                )}
+
+                <Button 
+                  onClick={onSubmitLearningInteraction} 
+                  disabled={learningLoading || !learningContent.trim()}
+                  className="w-full"
+                >
+                  {learningLoading ? "Submitting..." : "Submit"}
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={reportDialogOpen} onOpenChange={handleReportDialogClose}>
+          <DialogTrigger asChild>
+            <Button type="button" variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10">
+              <AlertTriangle className="w-4 h-4 mr-1" />
+              Report
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Report Content</DialogTitle>
+            </DialogHeader>
+            {reportSubmitted ? (
+              <div className="text-center py-4">
+                <p className="text-green-400 text-lg mb-2">Report Submitted</p>
+                <p className="text-sm text-muted-foreground">
+                  Thank you. Our team will review this report.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Please describe why you are reporting this content. Your report will be reviewed by our moderation team.
+                </p>
+                <Textarea
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  placeholder="Reason for reporting..."
+                  className="min-h-[120px]"
+                />
+                {error && (
+                  <p className="text-sm text-red-400">{error}</p>
+                )}
+                <Button 
+                  onClick={onSubmitReport} 
+                  disabled={reportLoading || !reportReason.trim()}
+                  className="w-full bg-red-600 hover:bg-red-500"
+                >
+                  {reportLoading ? "Submitting..." : "Submit Report"}
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+        
         {!user && (
           <p className="text-xs text-muted-foreground">
-            Login to like or comment.
+            Login to like, comment, or submit error reports.
           </p>
         )}
       </div>
