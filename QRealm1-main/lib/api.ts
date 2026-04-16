@@ -80,6 +80,8 @@ export type Blog = {
   slug: string
   content: string
   published: boolean
+  isHidden?: boolean
+  isFlagship?: boolean
   createdAt: string
   updatedAt: string
   authorId: string
@@ -100,6 +102,7 @@ export type Forum = {
   id: string
   title: string
   content: string
+  isHidden?: boolean
   createdAt: string
   updatedAt: string
   authorId: string
@@ -896,6 +899,8 @@ export async function getAdminAnalytics() {
     forums: number
     comments: number
     likes: number
+    interactions: number
+    reports: number
   }>>("/admin/analytics")
 }
 
@@ -1117,7 +1122,7 @@ export async function respondToAdminLearningInteraction(interactionId: string, i
   content: string
 }) {
   const url = `http://localhost:4000/api/admin/learning/interactions/${interactionId}/respond`
-  let headers = { "Content-Type": "application/json" }
+  let headers: Record<string, string> = { "Content-Type": "application/json" }
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("firebase_token")
     if (token) headers["Authorization"] = `Bearer ${token}`
@@ -1134,7 +1139,7 @@ export async function resolveAdminLearningInteraction(interactionId: string, inp
   make_public?: boolean
 }) {
   const url = `http://localhost:4000/api/admin/learning/interactions/${interactionId}/resolve`
-  let headers = { "Content-Type": "application/json" }
+  let headers: Record<string, string> = { "Content-Type": "application/json" }
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("firebase_token")
     if (token) headers["Authorization"] = `Bearer ${token}`
@@ -1143,4 +1148,18 @@ export async function resolveAdminLearningInteraction(interactionId: string, inp
   const data = await response.json()
   if (!response.ok) return { success: false, error: data.error || `Error ${response.status}` }
   return { success: true, data }
+}
+
+export async function verifyOTP(email: string, otp: string) {
+  return apiFetch<ApiResult<{ message: string }>>("/auth/verify", {
+    method: "POST",
+    body: JSON.stringify({ email, otp }),
+  })
+}
+
+export async function resendOTP(email: string) {
+  return apiFetch<ApiResult<{ message: string }>>("/auth/resend", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  })
 }

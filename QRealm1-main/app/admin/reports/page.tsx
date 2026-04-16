@@ -22,7 +22,7 @@ export default function AdminReportsPage() {
         if (result.success && result.data) {
           setReports(result.data.items || [])
           setTotal(result.data.total || 0)
-        } else {
+        } else if ('error' in result) {
           console.error("[AdminReports] Error:", result.error)
           setReports([])
         }

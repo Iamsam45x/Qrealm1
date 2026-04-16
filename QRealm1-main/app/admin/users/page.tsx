@@ -31,7 +31,7 @@ export default function AdminUsersPage() {
       if (result.success && result.data) {
         setUsers(result.data.items)
         setTotal(result.data.total)
-      } else if (result.error) {
+      } else if ('error' in result) {
         console.error("[AdminUsers] Error:", result.error)
       }
       setLoading(false)

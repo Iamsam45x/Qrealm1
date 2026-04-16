@@ -2,5 +2,4 @@
 __pycache__/
 *.pyc
 app.db
-uploads/
 .env

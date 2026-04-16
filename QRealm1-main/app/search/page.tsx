@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { searchContent, type Blog, type Forum } from "@/lib/api"
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams()
   const q = searchParams.get("q") || ""
   
@@ -184,5 +184,13 @@ export default function SearchPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen px-4 py-12 text-center text-muted-foreground">Loading search...</div>}>
+      <SearchPageContent />
+    </Suspense>
   )
 }
