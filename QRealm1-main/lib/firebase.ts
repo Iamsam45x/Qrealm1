@@ -13,9 +13,9 @@ const firebaseConfig = {
   apiKey: "AIzaSyDHUpMNtgVn62fbg_4De8eGeDVTp22T7gQ",
   authDomain: "qrealm-16732.firebaseapp.com",
   projectId: "qrealm-16732",
-  storageBucket: "qrealm-16732.appspot.com",
-  messagingSenderId: "<YOUR_MESSAGING_SENDER_ID>",
-  appId: "<YOUR_APP_ID>",
+  storageBucket: "qrealm-16732.firebasestorage.app",
+  messagingSenderId: "646176703330",
+  appId: "1:646176703330:web:36bb5689dd111e56a6a23b"
 }
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
