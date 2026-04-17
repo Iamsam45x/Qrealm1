@@ -356,24 +356,20 @@ export default function HomePage() {
               <Link
                 key={forum.id}
                 href={`/forums/${forum.id}`}
-                className="reveal glass-card group flex flex-col rounded-xl p-5 transition-all hover:border-blue-500/30"
-                style={{ transitionDelay: `${i * 100}ms` }}
-              >
-                <div className="flex items-center gap-2 text-xs text-muted-foreground/60 mb-2">
+                className="glass-card-forum group flex flex-col rounded-xl p-5 transition-all hover:border-blue-500/40"
+                style={{ display: 'block', visibility: 'visible', opacity: 1 }}>
+                <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
                   <span className="text-blue-400">FORUM</span>
                   <span>·</span>
                   <span>{new Date(forum.createdAt).toLocaleDateString()}</span>
                 </div>
-                <h3 className="font-serif text-lg font-semibold text-foreground group-hover:text-blue-300">
+                <h3 className="font-serif text-lg font-semibold text-white group-hover:text-blue-300 transition-colors" style={{ color: '#fff' }}>
                   {forum.title}
                 </h3>
-                <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                <p className="mt-2 text-sm text-gray-300 line-clamp-2" style={{ color: '#ccc' }}>
                   {forum.content.slice(0, 150)}...
                 </p>
-                <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground/60">
-                  <span>{forum.author?.name ?? "Unknown"}</span>
-                  <span>{forum._count?.comments ?? 0} comments</span>
-                </div>
+                <!-- rest of the content -->
               </Link>
             ))}
           </div>
