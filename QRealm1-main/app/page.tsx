@@ -9,7 +9,6 @@ import { listBlogs, listForums, type Blog, type Forum } from "@/lib/api"
 /* ===== SCROLL REVEAL HOOK ===== */
 function useReveal() {
   const ref = useRef<HTMLDivElement>(null)
-
   useEffect(() => {
     const el = ref.current
     if (!el) return
