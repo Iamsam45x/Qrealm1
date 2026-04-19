@@ -429,7 +429,7 @@ def user_payload_extended(row) -> Dict[str, Any]:
     }
 
 
-@app.post("/api/auth/register-firebase")
+@app.post("/auth/register-firebase")
 def register_firebase(input: FirebaseRegisterInput):
     """
     Register a new user with Firebase Authentication.
