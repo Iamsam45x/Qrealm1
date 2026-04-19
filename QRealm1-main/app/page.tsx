@@ -247,6 +247,7 @@ export default function HomePage() {
         </div>
       </section>
 
+
 {/* ===== INTELLECTUAL DISCOURSES - BLOGS ===== */}
       <section className="relative z-10 px-4 py-24 md:py-32" id="discourses">
         <div className="mx-auto max-w-6xl">
@@ -257,70 +258,54 @@ export default function HomePage() {
             <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
               Rigorous analyses bridging ancient wisdom and frontier science.
             </p>
-            <div className="mx-auto mt-4 h-px w-24 bg-gradient-to-r from-transparent via-saffron-500 to-transparent" />
+            <div className="mx-auto mt-4 h-px w-24 bg-gradient-to-r from-transparent via-blue-500 to-transparent" />
           </div>
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2">
             {loadingBlogs && (
-              <div className="glass-card rounded-2xl p-7 text-sm text-muted-foreground">
+              <div className="col-span-full glass-card-forum rounded-xl p-6 text-sm text-gray-400 text-center">
                 Loading...
               </div>
             )}
             {blogError && (
-              <div className="glass-card rounded-2xl border border-red-500/30 bg-red-500/10 p-7 text-sm text-red-200">
+              <div className="col-span-full glass-card-forum rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-sm text-red-200">
                 {blogError}
               </div>
             )}
             {!loadingBlogs && !blogError && blogs.length === 0 && (
-              <div className="col-span-full glass-card rounded-2xl p-7 text-sm text-muted-foreground text-center">
-                No discourses yet. <Link href="/blogs" className="text-saffron-400">Start one</Link>
+              <div className="col-span-full glass-card-forum rounded-xl p-6 text-sm text-gray-400 text-center">
+                No discourses yet. <Link href="/blogs" className="text-blue-400">Start one</Link>
               </div>
             )}
             {!loadingBlogs &&
               !blogError &&
               blogs.map((post, i) => (
-                <div
+                <Link
                   key={post.id}
-                  className="reveal"
-                  style={{ transitionDelay: `${i * 120}ms` }}
+                  href={`/blogs/${post.slug}`}
+                  className="glass-card-forum group flex flex-col rounded-xl p-5 transition-all hover:border-blue-500/40"
                 >
-                  <article className="glass-card animate-float-slow group flex h-full flex-col rounded-2xl p-7" style={{ animationDelay: `${i * 1.2}s` }}>
-                    <div className="mb-4 flex items-center justify-between">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-saffron-500/10 text-xs font-semibold text-saffron-400">
-                        {String(i + 1).padStart(2, "0")}
-                      </div>
-                      <span className="text-xs text-muted-foreground/60">BLOG</span>
-                    </div>
-
-                    <h3 className="font-serif text-xl font-semibold leading-snug text-foreground transition-colors duration-300 group-hover:text-saffron-300">
-                      {post.title}
-                    </h3>
-
-                    <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
-                      {renderExcerpt(post.content)}
-                    </p>
-
-                    <div className="mt-4 text-xs text-muted-foreground/60">
-                      {post.author?.name ?? "Unknown"}
-                    </div>
-
-                    <div className="mt-5">
-                      <Link
-                        href={`/blogs/${post.slug}`}
-                        className="saffron-underline inline-flex items-center gap-2 text-sm font-medium text-saffron-400 transition-colors duration-300 hover:text-saffron-300"
-                      >
-                        Read Analysis
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="transition-transform duration-300 group-hover:translate-x-1">
-                          <path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </Link>
-                    </div>
-                  </article>
-                </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
+                    <span className="text-blue-400">BLOG</span>
+                    <span>·</span>
+                    <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <h3 className="font-serif text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
+                    {post.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-300 line-clamp-2">
+                    {renderExcerpt(post.content)}
+                  </p>
+                  <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                    <span>{post.author?.name ?? "Unknown"}</span>
+                    <span>{post._count?.comments ?? 0} comments</span>
+                  </div>
+                </Link>
               ))}
           </div>
         </div>
       </section>
+
 
       {/* ===== INTELLECTUAL DISCOVERIES - FORUMS ===== */}
       <section className="relative z-10 px-4 py-24 md:py-32" style={{ background: "hsl(0, 0%, 3%)" }}>
