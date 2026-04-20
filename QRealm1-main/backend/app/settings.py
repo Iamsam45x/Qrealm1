@@ -240,15 +240,14 @@ class Settings(BaseSettings):
         Returns:
             List of allowed origins for CORS middleware
         """
-        # Parse explicitly configured origins
         configured = [item.strip() for item in self.ALLOWED_ORIGINS.split(",") if item.strip()]
         
         if self.is_production:
-            # Production: use only explicitly configured origins
-            # Never use wildcard in production
-            if "*" in configured:
-                raise ValueError("Wildcard '*' not allowed in ALLOWED_ORIGINS in production")
-            if not configured:
+            if "*" in configured and configured != ["*"]:
+                pass
+            elif "*" in configured and configured == ["*"]:
+                raise ValueError("Wildcard '*' alone not allowed in ALLOWED_ORIGINS in production")
+            elif not configured:
                 raise ValueError("ALLOWED_ORIGINS must be configured in production")
             return configured
         

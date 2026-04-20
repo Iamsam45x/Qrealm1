@@ -18,6 +18,7 @@ export interface Chapter {
   title: string
   description?: string
   topics: ChapterTopic[]
+  href?: string
 }
 
 export interface Phase {
@@ -89,11 +90,20 @@ export function PhaseSection({ phase }: { phase: Phase }) {
                   </li>
                 ))}
               </ul>
-              {/* Open Discussion button */}
+{/* Open Discussion button */}
               <div className="mt-4 pl-12">
-                <button className="saffron-underline text-xs font-medium text-saffron-400 transition-colors duration-300 hover:text-saffron-300">
-                  Open Discussion →
-                </button>
+                {chapter.href ? (
+                  <Link
+                    href={chapter.href}
+                    className="saffron-underline text-xs font-medium text-saffron-400 transition-colors duration-300 hover:text-saffron-300"
+                  >
+                    Open Discussion →
+                  </Link>
+                ) : (
+                  <button className="saffron-underline text-xs font-medium text-saffron-400 transition-colors duration-300 hover:text-saffron-300">
+                    Open Discussion →
+                  </button>
+                )}
               </div>
             </AccordionContent>
           </AccordionItem>

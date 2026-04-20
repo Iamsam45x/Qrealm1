@@ -10,6 +10,7 @@ export const quantumPhysicsPhases: Phase[] = [
 {
         number: 1,
         title: "Introduction to Modern Physics",
+        href: "/quantum-physics/failure-classical-physics",
         topics: [
           { label: "Failure of classical physics", href: "/quantum-physics/failure-classical-physics" },
           { label: "Birth of modern ideas" },

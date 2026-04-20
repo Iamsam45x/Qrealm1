@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation"
 import type { User } from "@/lib/api"
 import {
   getMe,
+  getApiBase,
   setClientAccessToken,
   isBrowser,
 } from "@/lib/api"
@@ -199,7 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(FIREBASE_UID_KEY, fbUser.uid)
       }
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/auth/register-firebase`, {
+      const response = await fetch(`${getApiBase()}/auth/register-firebase`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -15,8 +15,11 @@ import axios from "axios"
 export function getApiBase(): string {
   const envUrl = process.env.NEXT_PUBLIC_API_URL
 
-  if (envUrl && envUrl.trim()) {
+if (envUrl && envUrl.trim()) {
     let base = envUrl.trim().replace(/\/$/, "")
+    if (!base.startsWith("http://") && !base.startsWith("https://")) {
+      base = "https://" + base
+    }
     if (!base.endsWith("/api")) {
       base = base + "/api"
     }

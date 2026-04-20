@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { getApiBase } from "@/lib/api"
 
 const TOKEN_KEY = "firebase_token"
 
@@ -35,7 +36,9 @@ export default function AdminInteractionsPage() {
       if (statusFilter) searchParams.set("status", statusFilter)
       if (typeFilter) searchParams.set("interaction_type", typeFilter)
       
-      const url = `http://localhost:4000/api/admin/learning/interactions?${searchParams.toString()}`
+      const apiBase = getApiBase()
+      
+      const url = `${apiBase}/admin/learning/interactions?${searchParams.toString()}`
       
       try {
         const response = await fetch(url, {
@@ -61,7 +64,9 @@ export default function AdminInteractionsPage() {
     const token = localStorage.getItem(TOKEN_KEY)
     
     try {
-      const response = await fetch(`http://localhost:4000/api/admin/learning/interactions/${selectedInteraction.id}/respond`, {
+      const apiBase = getApiBase()
+      
+      const response = await fetch(`${apiBase}/admin/learning/interactions/${selectedInteraction.id}/respond`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -85,9 +90,10 @@ export default function AdminInteractionsPage() {
     if (!selectedInteraction) return
     setActionLoading(selectedInteraction.id)
     const token = localStorage.getItem(TOKEN_KEY)
+    const apiBase = getApiBase()
     
     try {
-      const response = await fetch(`http://localhost:4000/api/admin/learning/interactions/${selectedInteraction.id}/resolve`, {
+      const response = await fetch(`${apiBase}/admin/learning/interactions/${selectedInteraction.id}/resolve`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",

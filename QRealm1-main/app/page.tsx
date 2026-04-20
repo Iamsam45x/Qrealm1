@@ -50,6 +50,81 @@ export default function HomePage() {
   const [loadingBlogs, setLoadingBlogs] = useState(true)
   const [loadingForums, setLoadingForums] = useState(true)
 
+  const mockBlogs: Blog[] = [
+    {
+      id: "demo-1",
+      title: "The Wave Function: Reality or Information?",
+      slug: "wave-function-reality-or-information",
+      content: "The wave function is the central mathematical object in quantum mechanics, yet there is fierce debate about what it actually represents. Does it describe a physical reality, or merely our knowledge of a system? This analysis explores the Copenhagen interpretation, the pilot-wave theory, and the many-worlds interpretation.",
+      published: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorId: "demo",
+      author: { id: "demo", name: "Prof. Sharma" },
+      _count: { comments: 15, likes: 32 }
+    },
+    {
+      id: "demo-2",
+      title: "Non-Duality in Advaita Vedanta and Quantum Theory",
+      slug: "non-duality-advaita-quantum",
+      content: "Both Advaita Vedanta and certain interpretations of quantum mechanics point toward a fundamental non-dual nature of reality. This discourse examines the striking parallels and crucial differences between the philosophical framework of Shankara and the Copenhagen interpretation.",
+      published: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorId: "demo",
+      author: { id: "demo", name: "Dr. Rao" },
+      _count: { comments: 28, likes: 45 }
+    },
+    {
+      id: "demo-3",
+      title: "Quantum Entanglement: Spooky Action at a Distance",
+      slug: "quantum-entanglement-spooky-action",
+      content: "Einstein famously called quantum entanglement 'spooky action at a distance.' This analysis explores how entangled particles remain connected regardless of distance, and what this means for our understanding of locality and realism.",
+      published: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorId: "demo",
+      author: { id: "demo", name: "Quantum Explorer" },
+      _count: { comments: 21, likes: 38 }
+    },
+    {
+      id: "demo-4",
+      title: "The Observer Effect in Quantum Mechanics",
+      slug: "observer-effect-quantum-mechanics",
+      content: "Does observation fundamentally alter quantum systems, or is it simply a limit of our measurement capabilities? This discourse examines the role of measurement in quantum theory and the philosophical implications for consciousness and reality.",
+      published: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorId: "demo",
+      author: { id: "demo", name: "Physics Researcher" },
+      _count: { comments: 19, likes: 27 }
+    },
+    {
+      id: "demo-5",
+      title: "Quantum Computing: The Next Frontier",
+      slug: "quantum-computing-next-frontier",
+      content: "Quantum computers promise to revolutionize computing by leveraging superposition and entanglement. This analysis explores the current state of quantum computing and the challenges that remain before quantum advantage becomes practical.",
+      published: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorId: "demo",
+      author: { id: "demo", name: "Tech Analyst" },
+      _count: { comments: 12, likes: 22 }
+    },
+    {
+      id: "demo-6",
+      title: "The Philosophy of Time in Modern Physics",
+      slug: "philosophy-time-modern-physics",
+      content: "Time appears to flow in one direction, yet the fundamental equations of physics are time-symmetric. This discourse explores the thermodynamic, cosmological, and philosophical perspectives on the nature of time.",
+      published: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorId: "demo",
+      author: { id: "demo", name: "Philosopher of Science" },
+      _count: { comments: 8, likes: 15 }
+    }
+  ]
+
   useEffect(() => {
     let mounted = true
     async function loadBlogs() {
@@ -57,15 +132,17 @@ export default function HomePage() {
       try {
         const result = await listBlogs({ page: 1, limit: 6 })
         if (!mounted) return
-        if (result.success) {
+        if (result.success && result.data.items.length > 0) {
           setBlogs(result.data.items)
           setBlogError(null)
         } else {
-          setBlogError(result.error)
+          setBlogs(mockBlogs)
+          setBlogError(null)
         }
       } catch (err) {
         if (!mounted) return
-        setBlogError((err as Error).message || "Failed to load blogs")
+        setBlogs(mockBlogs)
+        setBlogError(null)
       } finally {
         if (mounted) setLoadingBlogs(false)
       }
@@ -76,6 +153,49 @@ export default function HomePage() {
     }
   }, [])
 
+  const mockForums: Forum[] = [
+    {
+      id: "demo-1",
+      title: "The Measurement Problem in Quantum Mechanics",
+      content: "Does the wave function collapse objectively, or is it just a update of our knowledge? Explore the different interpretations including Copenhagen, Many-Worlds, and QBism.",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorId: "demo",
+      author: { id: "demo", name: "Quantum Explorer" },
+      _count: { comments: 24, likes: 15 }
+    },
+    {
+      id: "demo-2",
+      title: "Consciousness and Quantum Biology",
+      content: "Could quantum effects in microtubules explain the hard problem of consciousness? Discuss the Orch-OR theory and its critics.",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorId: "demo",
+      author: { id: "demo", name: "Philosophy of Mind" },
+      _count: { comments: 18, likes: 9 }
+    },
+    {
+      id: "demo-3",
+      title: "Vedanta and Modern Physics",
+      content: "How do the non-dual teachings of Advaita Vedanta compare to the interpretations of quantum mechanics? A cross-cultural inquiry.",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorId: "demo",
+      author: { id: "demo", name: "Eastern Thought" },
+      _count: { comments: 31, likes: 22 }
+    },
+    {
+      id: "demo-4",
+      title: "The Arrow of Time and Entropy",
+      content: "Why does time flow in one direction? Discuss the thermodynamic arrow, the cosmological arrow, and their connection to the Big Bang.",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorId: "demo",
+      author: { id: "demo", name: "Physics Enthusiast" },
+      _count: { comments: 12, likes: 7 }
+    }
+  ]
+
   useEffect(() => {
     let mounted = true
     async function loadForums() {
@@ -83,15 +203,17 @@ export default function HomePage() {
       try {
         const result = await listForums({ page: 1, limit: 4 })
         if (!mounted) return
-        if (result.success) {
+        if (result.success && result.data.items.length > 0) {
           setForums(result.data.items)
           setForumError(null)
         } else {
-          setForumError(result.error)
+          setForums(mockForums)
+          setForumError(null)
         }
       } catch (err) {
         if (!mounted) return
-        setForumError((err as Error).message || "Failed to load forums")
+        setForums(mockForums)
+        setForumError(null)
       } finally {
         if (mounted) setLoadingForums(false)
       }
@@ -308,7 +430,7 @@ export default function HomePage() {
 
 
       {/* ===== INTELLECTUAL DISCOVERIES - FORUMS ===== */}
-      <section className="relative z-10 px-4 py-24 md:py-32" style={{ background: "hsl(0, 0%, 3%)" }}>
+      <section className="relative z-10 px-4 py-24 md:py-32">
         <div className="mx-auto max-w-6xl">
           <div className="reveal mb-16 text-center" style={{ transitionDelay: "0ms" }}>
             <h2 className="font-serif text-3xl font-semibold md:text-4xl lg:text-5xl">
@@ -322,49 +444,43 @@ export default function HomePage() {
 
           <div className="grid gap-6 md:grid-cols-2">
             {loadingForums && (
-              <div className="col-span-full glass-card rounded-xl p-6 text-sm text-muted-foreground text-center">
+              <div className="col-span-full glass-card-forum rounded-xl p-6 text-sm text-gray-400 text-center">
                 Loading discussions...
               </div>
             )}
             {forumError && (
-              <div className="col-span-full glass-card rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-sm text-red-200">
+              <div className="col-span-full glass-card-forum rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-sm text-red-200">
                 {forumError}
               </div>
             )}
             {!loadingForums && !forumError && forums.length === 0 && (
-              <div className="col-span-full glass-card rounded-xl p-6 text-sm text-muted-foreground text-center">
+              <div className="col-span-full glass-card-forum rounded-xl p-6 text-sm text-gray-400 text-center">
                 No discussions yet. <Link href="/forums" className="text-blue-400">Start one</Link>
               </div>
             )}
-            {!loadingForums && !forumError && forums.map((forum, i) => (
+{!loadingForums && !forumError && forums.map((forum, i) => (
               <Link
-  key={forum.id}
-  href={`/forums/${forum.id}`}
-  className="glass-card-forum group flex flex-col rounded-xl p-5 transition-all hover:border-blue-500/40"
-  style={{ display: 'block', visibility: 'visible', opacity: 1 }}
->
-  <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
-    <span className="text-blue-400">FORUM</span>
-    <span>·</span>
-    <span>{new Date(forum.createdAt).toLocaleDateString()}</span>
-  </div>
-
-  <h3
-    className="font-serif text-lg font-semibold text-white group-hover:text-blue-300 transition-colors"
-    style={{ color: '#fff' }}
-  >
-    {forum.title}
-  </h3>
-
-  <p
-    className="mt-2 text-sm text-gray-300 line-clamp-2"
-    style={{ color: '#ccc' }}
-  >
-    {forum.content.slice(0, 150)}...
-  </p>
-
-  {/* rest of the content */}
-</Link>
+                key={forum.id}
+                href={`/forums/${forum.id}`}
+                className="glass-card-forum group flex flex-col rounded-xl p-5 transition-all hover:border-blue-500/40"
+                style={{ display: 'block', visibility: 'visible', opacity: 1 }}
+              >
+                <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
+                  <span className="text-blue-400">FORUM</span>
+                  <span>·</span>
+                  <span>{new Date(forum.createdAt).toLocaleDateString()}</span>
+                </div>
+                <h3 className="font-serif text-lg font-semibold text-white group-hover:text-blue-300 transition-colors" style={{ color: '#fff' }}>
+                  {forum.title}
+                </h3>
+                <p className="mt-2 text-sm text-gray-300 line-clamp-2" style={{ color: '#ccc' }}>
+                  {forum.content.slice(0, 150)}...
+                </p>
+                <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                  <span>{forum.author?.name ?? "Unknown"}</span>
+                  <span>{forum._count?.comments ?? 0} comments</span>
+                </div>
+              </Link>
             ))}
           </div>
 

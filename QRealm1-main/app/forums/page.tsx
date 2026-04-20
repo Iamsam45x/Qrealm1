@@ -22,11 +22,8 @@ export default async function ForumsPage() {
   const cookie = (await headers()).get("cookie") ?? ""
   const result = await listForums({ page: 1, limit: 12 }, { cookie })
 
-  if (!result.success) {
-    throw new Error(result.error)
-  }
-
-  const forums = result.data.items
+  const forums = result.success ? result.data.items : []
+  const error = result.success ? null : result.error
 
   return (
     <div className="relative z-10">
@@ -46,10 +43,18 @@ export default async function ForumsPage() {
             </Link>
           </div>
         </div>
-      </section>
+</section>
+
+      {error && (
+        <div className="mx-auto max-w-4xl px-4 pb-8">
+          <div className="rounded-lg bg-red-500/10 p-4 text-center text-red-400">
+            Unable to load forums. Please try again later.
+          </div>
+        </div>
+      )}
 
       <section className="mx-auto max-w-4xl space-y-6 px-4 pb-24">
-        {forums.length === 0 && (
+        {forums.length === 0 && !error && (
           <div className="glass-card rounded-2xl p-8 text-center text-sm text-muted-foreground">
             No forum threads yet.
           </div>

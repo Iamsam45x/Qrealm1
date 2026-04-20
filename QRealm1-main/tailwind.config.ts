@@ -49,7 +49,7 @@ const config: Config = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-        saffron: {
+saffron: {
           50: 'hsl(var(--saffron-50))',
           100: 'hsl(var(--saffron-100))',
           200: 'hsl(var(--saffron-200))',
@@ -58,6 +58,11 @@ const config: Config = {
           500: 'hsl(var(--saffron-500))',
           600: 'hsl(var(--saffron-600))',
           700: 'hsl(var(--saffron-700))',
+        },
+        blue: {
+          300: 'hsl(210 100% 65%)',
+          400: 'hsl(210 100% 60%)',
+          500: 'hsl(210 100% 55%)',
         },
       },
       borderRadius: {
