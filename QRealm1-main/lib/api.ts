@@ -16,7 +16,11 @@ export function getApiBase(): string {
   const envUrl = process.env.NEXT_PUBLIC_API_URL
 
   if (envUrl && envUrl.trim()) {
-    return envUrl.trim().replace(/\/$/, "")
+    let base = envUrl.trim().replace(/\/$/, "")
+    if (!base.endsWith("/api")) {
+      base = base + "/api"
+    }
+    return base
   }
 
   if (typeof window !== "undefined") {
@@ -1092,7 +1096,7 @@ export async function listAdminLearningInteractions(params: {
   if (params.interaction_type) searchParams.set("interaction_type", params.interaction_type)
   const qs = searchParams.toString()
   
-  const url = `http://localhost:4000/api/admin/learning/interactions${qs ? "?" + qs : ""}`
+  const url = `${getApiBase()}/admin/learning/interactions${qs ? "?" + qs : ""}`
   console.log("[listAdminLearningInteractions] URL:", url)
   
   let headers: Record<string, string> = {}
@@ -1121,7 +1125,7 @@ export async function respondToAdminLearningInteraction(interactionId: string, i
   response_type: "ACKNOWLEDGE" | "EXPLAIN" | "CLARIFY" | "RECONCILE" | "CORRECT"
   content: string
 }) {
-  const url = `http://localhost:4000/api/admin/learning/interactions/${interactionId}/respond`
+  const url = `${getApiBase()}/admin/learning/interactions/${interactionId}/respond`
   let headers: Record<string, string> = { "Content-Type": "application/json" }
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("firebase_token")
@@ -1138,7 +1142,7 @@ export async function resolveAdminLearningInteraction(interactionId: string, inp
   resolution?: string
   make_public?: boolean
 }) {
-  const url = `http://localhost:4000/api/admin/learning/interactions/${interactionId}/resolve`
+  const url = `${getApiBase()}/admin/learning/interactions/${interactionId}/resolve`
   let headers: Record<string, string> = { "Content-Type": "application/json" }
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("firebase_token")

@@ -9,6 +9,8 @@ import { useAuth } from "@/components/auth/auth-provider"
 
 const navItems = [
   { label: "Home", href: "/" },
+  { label: "Quantum Physics", href: "/quantum-physics" },
+  { label: "Quantum Computing", href: "/quantum-computing" },
   { label: "Learning Hub", href: "/learning-hub" },
   { label: "Search", href: "/search" },
   { label: "Blogs", href: "/blogs" },
