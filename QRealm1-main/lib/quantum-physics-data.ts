@@ -7,11 +7,11 @@ export const quantumPhysicsPhases: Phase[] = [
     description:
       "Understand why classical physics reached its limits and how the seeds of quantum theory were planted through thermodynamics and relativity.",
     chapters: [
-      {
+{
         number: 1,
         title: "Introduction to Modern Physics",
         topics: [
-          { label: "Failure of classical physics" },
+          { label: "Failure of classical physics", href: "/quantum-physics/failure-classical-physics" },
           { label: "Birth of modern ideas" },
           { label: "Why quantum theory was required" },
         ],

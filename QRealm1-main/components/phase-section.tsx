@@ -6,9 +6,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import Link from "next/link"
 
 export interface ChapterTopic {
   label: string
+  href?: string
 }
 
 export interface Chapter {
@@ -66,15 +68,24 @@ export function PhaseSection({ phase }: { phase: Phase }) {
                   {chapter.description}
                 </p>
               )}
-              {/* Subtopics */}
+{/* Subtopics */}
               <ul className="flex flex-col gap-2.5 pl-12">
                 {chapter.topics.map((topic) => (
                   <li
                     key={topic.label}
-                    className="flex items-start gap-3 text-sm text-muted-foreground"
+                    className="flex items-start gap-3 text-sm"
                   >
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron-400/50" />
-                    <span>{topic.label}</span>
+                    {topic.href ? (
+                      <Link
+                        href={topic.href}
+                        className="text-saffron-400 hover:text-saffron-300 transition-colors duration-300"
+                      >
+                        {topic.label}
+                      </Link>
+                    ) : (
+                      <span className="text-muted-foreground">{topic.label}</span>
+                    )}
                   </li>
                 ))}
               </ul>
