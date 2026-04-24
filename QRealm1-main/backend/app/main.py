@@ -667,7 +667,7 @@ def logout(request: Request):
   return res
 
 
-@app.get("/auth/me")
+@app.get("/api/auth/me")
 def me(request: Request):
   try:
     user = get_current_user(request)
