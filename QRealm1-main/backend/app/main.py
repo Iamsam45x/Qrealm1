@@ -429,7 +429,7 @@ def user_payload_extended(row) -> Dict[str, Any]:
     }
 
 
-@app.post("/auth/register-firebase")
+@app.post("/api/auth/register-firebase")
 def register_firebase(input: FirebaseRegisterInput):
     """
     Register a new user with Firebase Authentication.
@@ -667,7 +667,7 @@ def logout(request: Request):
   return res
 
 
-@app.get("/api/auth/me")
+@app.get("/auth/me")
 def me(request: Request):
   try:
     user = get_current_user(request)
