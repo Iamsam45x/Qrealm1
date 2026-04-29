@@ -7,16 +7,20 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/components/auth/auth-provider"
 
-const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*\-–—+=()[\]{}|\\:;"'<>,./?`~])[A-Za-z\d!@#$%^&*\-–—+=()[\]{}|\\:;"'<>,./?`~]{8,}$/
+const PASSWORD_MIN_LENGTH = 8
+const PASSWORD_MAX_LENGTH = 128
+
+const SPECIAL_CHARS = /[!@#$%^&*\-–—+=()[\]{}|\\:;"'<>,./?`~]/
 
 function getPasswordStrength(password: string): { level: "weak" | "medium" | "strong"; score: number } {
   let score = 0
-  if (password.length >= 8) score++
+  if (password.length >= PASSWORD_MIN_LENGTH) score++
   if (password.length >= 12) score++
   if (/[a-z]/.test(password)) score++
   if (/[A-Z]/.test(password)) score++
   if (/[0-9]/.test(password)) score++
-  if (/[@$!%*?&]/.test(password)) score++
+  if (SPECIAL_CHARS.test(password)) score++
   
   if (score < 4) return { level: "weak", score }
   if (score < 5) return { level: "medium", score }
@@ -68,10 +72,12 @@ function validateEmail(email: string): string | null {
 
 function validatePassword(password: string): string | null {
   if (!password) return "Password is required"
-  if (password.length < 8) return "Password must be at least 8 characters"
-  if (!PASSWORD_PATTERN.test(password)) {
-    return "Must include uppercase, lowercase, number, and special character"
-  }
+  if (password.length < PASSWORD_MIN_LENGTH) return `Password must be at least ${PASSWORD_MIN_LENGTH} characters`
+  if (password.length > PASSWORD_MAX_LENGTH) return `Password must not exceed ${PASSWORD_MAX_LENGTH} characters`
+  if (!/(?=.*[a-z])/.test(password)) return "Password must include at least one lowercase letter"
+  if (!/(?=.*[A-Z])/.test(password)) return "Password must include at least one uppercase letter"
+  if (!/(?=.*\d)/.test(password)) return "Password must include at least one number"
+  if (!/(?=.*[!@#$%^&*\-–—+=()[\]{}|\\:;"'<>,./?`~])/.test(password)) return "Password must include at least one special character"
   return null
 }
 
